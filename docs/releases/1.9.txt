@@ -452,6 +452,10 @@ Migrations
 Models
 ^^^^^^
 
+* Added the :class:`~django.db.models.BigAutoField` that acts much like
+  an :class:`~django.db.models.AutoField` except that it is guaranteed
+  to fit numbers from ``1`` to ``9223372036854775807``.
+
 * :meth:`QuerySet.bulk_create() <django.db.models.query.QuerySet.bulk_create>`
   now works on proxy models.
 

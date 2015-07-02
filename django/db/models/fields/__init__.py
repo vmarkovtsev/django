@@ -45,7 +45,7 @@ from django.utils.translation import ugettext_lazy as _
 # Avoid "TypeError: Item in ``from list'' not a string" -- unicode_literals
 # makes these strings unicode
 __all__ = [str(x) for x in (
-    'AutoField', 'BLANK_CHOICE_DASH', 'BigIntegerField', 'BinaryField',
+    'AutoField', 'BigAutoField', 'BLANK_CHOICE_DASH', 'BigIntegerField', 'BinaryField',
     'BooleanField', 'CharField', 'CommaSeparatedIntegerField', 'DateField',
     'DateTimeField', 'DecimalField', 'DurationField', 'EmailField', 'Empty',
     'Field', 'FieldDoesNotExist', 'FilePathField', 'FloatField',
@@ -630,6 +630,12 @@ class Field(RegisterLookupMixin):
         except KeyError:
             return None
 
+    def rel_db_type(self, connection):
+        """
+        Returns the database column data type for related field referencing to this.
+        """
+        return self.db_type(connection)
+
     def db_parameters(self, connection):
         """
         Extension of db_type(), providing a range of different return
@@ -964,6 +970,12 @@ class AutoField(Field):
                 params={'value': value},
             )
 
+    def rel_db_type(self, connection):
+        """
+        Returns the database column data type for related field referencing to this.
+        """
+        return IntegerField().db_type(connection=connection)
+
     def validate(self, value, model_instance):
         pass
 
@@ -988,6 +1000,19 @@ class AutoField(Field):
 
     def formfield(self, **kwargs):
         return None
+
+
+class BigAutoField(AutoField):
+    description = _("Big (8 byte) integer")
+
+    def get_internal_type(self):
+        return "BigAutoField"
+
+    def rel_db_type(self, connection):
+        """
+        Returns the database column data type for related field referencing to this.
+        """
+        return BigIntegerField().db_type(connection=connection)
 
 
 class BooleanField(Field):
@@ -1875,6 +1900,12 @@ class IntegerField(Field):
     def get_internal_type(self):
         return "IntegerField"
 
+    def rel_db_type(self, connection):
+        """
+        Returns the database column data type for related field referencing to this.
+        """
+        return self.db_type(connection)
+
     def to_python(self, value):
         if value is None:
             return value
@@ -2097,6 +2128,15 @@ class PositiveIntegerField(IntegerField):
         defaults.update(kwargs)
         return super(PositiveIntegerField, self).formfield(**defaults)
 
+    def rel_db_type(self, connection):
+        """
+        Returns the database column data type for related field referencing to this.
+        """
+        if connection.features.related_fields_match_type:
+            return self.db_type(connection)
+        else:
+            return IntegerField().db_type(connection=connection)
+
 
 class PositiveSmallIntegerField(IntegerField):
     description = _("Positive small integer")
@@ -2108,6 +2148,15 @@ class PositiveSmallIntegerField(IntegerField):
         defaults = {'min_value': 0}
         defaults.update(kwargs)
         return super(PositiveSmallIntegerField, self).formfield(**defaults)
+
+    def rel_db_type(self, connection):
+        """
+        Returns the database column data type for related field referencing to this.
+        """
+        if connection.features.related_fields_match_type:
+            return self.db_type(connection)
+        else:
+            return IntegerField().db_type(connection=connection)
 
 
 class SlugField(CharField):

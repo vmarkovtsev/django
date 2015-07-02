@@ -4,7 +4,9 @@ from django.db import transaction
 from django.test import TestCase
 from django.utils import six
 
-from .models import Article, InheritedArticleA, InheritedArticleB, Publication
+from .models import (
+    Article, InheritedArticleA, InheritedArticleB, Publication, Tag,
+)
 
 
 class ManyToManyTests(TestCase):
@@ -27,6 +29,12 @@ class ManyToManyTests(TestCase):
 
         self.a4 = Article.objects.create(headline='Oxygen-free diet works wonders')
         self.a4.publications.add(self.p2)
+
+        self.t1 = Tag.objects.create(name='web')
+        self.t2 = Tag.objects.create(id=2 ** 33, name='development')
+        self.t3 = Tag.objects.create(name='framework')
+        self.a1.tags.add(self.t1, self.t2, self.t3)
+        self.a2.tags.add(self.t1)
 
     def test_add(self):
         # Create an Article.
